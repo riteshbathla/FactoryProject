@@ -280,7 +280,7 @@ import java.util.Map;
 		{
 			if(objRecipeMap!=null)
 			{
-				System.out.println("Recipes Loaded : "+objRecipeMap.size());
+				System.out.println("\n\nRecipes Loaded : "+objRecipeMap.size());
 			}
 			if(objInventory!=null)
 			{
@@ -294,10 +294,10 @@ import java.util.Map;
 		
 		public void printInventoryStatus()
 		{
+	    	System.out.println("Inventory Status:");
 			for (Object inventoryItem : objInventory.keySet()) {
 	    	String strItem=(String)inventoryItem;
 	    	int qtyStatus=Integer.parseInt(objInventory.get(strItem).toString());
-	    	System.out.println("Inventory Status:");
 	    	System.out.println(strItem+ " : " +qtyStatus );
 		}
 			

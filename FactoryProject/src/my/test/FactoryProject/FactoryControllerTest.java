@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import my.DataBean.ItemDataBean;
@@ -24,7 +25,8 @@ class FactoryControllerTest {
 	}
 
 	@Test
-	void testFurnishOrderFromRecipe() {
+	@DisplayName("Factory should not complete this order")
+	void testPrcoessOrderMultipleItems() {
 		
 		factoryController.buildOrder("electric_engine",3);
 		factoryController.buildOrder("electric_circuit",5);
@@ -32,14 +34,25 @@ class FactoryControllerTest {
 
 		factoryController.buildOrder("engine_block",3);
         assertEquals(false, factoryController.processOrder(),      
-        "Factory should not be able to build the Order");          
+        "Factory should not be able to complete the Order");          
 
         
         
 
-        /*assertEquals(false, factoryController.furnishOrderFromRecipe("steel_plate",8),      
-        "Factory should not be able to finish the steel_plate order"); 
-	*/
+	}
+
+	
+	@Test
+	@DisplayName("Factory should complete this order")
+	void testPrcoessOrderSingleItem() {
+		
+		factoryController.buildOrder("electric_engine",3);
+	        assertEquals(true, factoryController.processOrder(),      
+        "Factory should be able to complete the Order");          
+
+        
+        
+
 	}
 
 }
