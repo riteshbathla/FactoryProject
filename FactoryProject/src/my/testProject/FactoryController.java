@@ -1,10 +1,10 @@
 package my.testProject;
 
 import org.json.simple.JSONObject;
+
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import my.DataBean.ItemListDataBean;
 import my.DataBean.RecipeDataBean;
 
 import java.io.FileReader;
@@ -18,10 +18,8 @@ import java.util.Map;
 	{
 		public JSONObject objInventory=new JSONObject();
 		public Map<String,RecipeDataBean> objRecipeMap=new HashMap<String,RecipeDataBean>();
-		public ItemListDataBean objOrder=new ItemListDataBean();
 	    public static void main(String[] args) {
 	    	
-	    	System.out.println("Hello world");
 	    	FactoryController fc=new FactoryController();
 	        fc.readInventoryFile();
 	        fc.readRecipes();
