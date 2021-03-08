@@ -13,7 +13,7 @@ public class RecipeDataBean implements Serializable{
 	private float fltTime;
 	private JSONObject objItemsConsumed;
 	private String strItemProduced;
-	private int intItemQuantity;
+	private int intItemQuantityProduced;
 	public String getStrTitle() {
 		return strTitle;
 	}
@@ -41,16 +41,16 @@ public class RecipeDataBean implements Serializable{
 		this.strItemProduced = strItemProduced;
 	}
 
-	public int getIntItemQuantity() {
-		return intItemQuantity;
-	}
-	public void setIntItemQuantity(int intItemQuantity) {
-		this.intItemQuantity = intItemQuantity;
-	}
 	public JSONObject getObjItemsConsumed() {
 		return objItemsConsumed;
 	}
 	public void setObjItemsConsumed(JSONObject objItemsConsumed) {
 		this.objItemsConsumed = objItemsConsumed;
+	}
+	public int getIntItemQuantityProduced() {
+		return intItemQuantityProduced;
+	}
+	public void setIntItemQuantityProduced(int intItemQuantityProduced) {
+		this.intItemQuantityProduced = intItemQuantityProduced;
 	}
 }
