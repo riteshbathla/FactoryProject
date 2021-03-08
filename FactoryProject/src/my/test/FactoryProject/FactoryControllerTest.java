@@ -29,7 +29,8 @@ class FactoryControllerTest {
 		factoryController.buildOrder("electric_engine",3);
 		factoryController.buildOrder("electric_circuit",5);
 		factoryController.buildOrder("electric_engine",3);
-		
+
+		factoryController.buildOrder("engine_block",3);
         assertEquals(false, factoryController.processOrder(),      
         "Factory should not be able to build the Order");          
 

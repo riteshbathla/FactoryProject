@@ -24,6 +24,9 @@ import java.util.Map;
 		private Map<String,RecipeDataBean> objRecipeMap=new HashMap<String,RecipeDataBean>();
 		private List<ItemDataBean> orderList=new ArrayList<ItemDataBean>();
 
+		/*
+		 * This method takes inorder inputs to build the order
+		 */
 		
 		public void buildOrder(String strItem, int qtyNeeded)
 		{
@@ -33,96 +36,92 @@ import java.util.Map;
 			orderList.add(item);
 		}
 		
-		public boolean processOrder()
+		/*
+		 * 
+		 * This method will process the order request
+		 */
+		public boolean processOrder() 
 		{
 			printCount();
-			//RecipeLoaded();
 			printInventoryStatus();
-			boolean isProcessed=false;
-	          for (int counter = 0; counter < orderList.size(); counter++) { 	
-	        	  ItemDataBean item=new ItemDataBean();
-	        	  item=orderList.get(counter);
-	        	  System.out.println("Processing order item : "+item.getItemName()+" for quantity: "+item.getItemQuantity());
-	        	  if(!getOrMakeItem(item.getItemName(),item.getItemQuantity()))
-	        	  {
-	        		  printInventoryStatus();
-	        		  return false;
-	        	  }
-	          }
-   			  System.out.println("order is procssed");
-   			  printInventoryStatus();
-	          return true;
-		}
-		
-		public void printCount()
-		{
-			if(objRecipeMap!=null)
-			{
-				System.out.println("Recipes Loaded : "+objRecipeMap.size());
-			}
-			if(objInventory!=null)
-			{
-				System.out.println("Inventory Loaded : "+objInventory.size());
-			}
-		}
-		
-		public void printInventoryStatus()
-		{
-			for (Object inventoryItem : objInventory.keySet()) {
-	    	String strItem=(String)inventoryItem;
-	    	int qtyStatus=Integer.parseInt(objInventory.get(strItem).toString());
-	    	System.out.println("Inventory Status:");
-	    	System.out.println("Item: "+strItem+ " , qty" +qtyStatus );
-		}
-			
-		}
-		
-		
-		public boolean furnishOrderFromRecipe(String strOrderItem, int intOrderItemQuantity)
-		{
-			boolean isFurnished;
-			RecipeDataBean objRecipe=objRecipeMap.get(strOrderItem);
-			float timeNeeded=(float) 0.0;
-			if (objRecipe!=null)
-			{
-				JSONObject itemsConsumed=objRecipe.getObjItemsConsumed();
-					//System.out.println("time needed for Recipe"+objRecipe.getFltTime());
-				//simple or complex items needed
-				for (int counter=0;counter<intOrderItemQuantity;counter++) {
-					float timeConsumed=(float)0.0;
-					
-					for (Object item : itemsConsumed.keySet()) {
-				    	String strItem=(String)item;
-				    	int qtyNeeded=Integer.parseInt(itemsConsumed.get(strItem).toString());
-				    	if(getOrMakeItem(strItem,qtyNeeded))
-				    	{
-				    	//	System.out.println("Item "+strItem+" with qty "+qtyNeeded+" made.");
-				    		
-				    	}	
-				    	else
-				    	{
-				    		System.out.println("Order "+strOrderItem+" can't be done");
-				    		return false;
-				    	}
-					}
-					System.out.println("Building recipe "+objRecipe.getStrRecipeKey()+" in "+objRecipe.getFltTime()+"s");
-					updateInventory(objRecipe.getStrItemProduced(),objRecipe.getIntItemQuantityProduced());
-					//System.out.println("Item added to inventory ->"+objRecipe.getStrItemProduced());
+			try {
+		          for (int counter = 0; counter < orderList.size(); counter++) { 	
+		        	  double timeConsumed=0.0;
+		        	  ItemDataBean item=new ItemDataBean();
+		        	  item=orderList.get(counter);
+		        	  String orderItemName=item.getItemName();
+		        	  int orderItemQuantity=item.getItemQuantity();
+		        	  
+		        	  double recipeTime;
+		        	  if((recipeTime=makeRecipe(orderItemName,orderItemQuantity))>0)
+		        	  {
+		        		  timeConsumed=timeConsumed+recipeTime;
+		        	  }
+		        	  
+		          }
+				  System.out.println("order is procssed");
+		          return true;				}
+				catch(ItemNotMadeException e)
+				{
+					System.out.println("Exception message->"+e.getMessage());
+					return false;
 				}
-				//objInventory.put(objRecipe.getStrItemProduced(),objRecipe.getIntItemQuantityProduced());
-				isFurnished=true;
-			}
-			else
-			{
-				//System.out.println("This project can't be done");
-				isFurnished=false;
-			}
-			//return true;
-			
-			return isFurnished;
+				finally 
+				{
+		   			  printInventoryStatus();
+//		   			  return false;
+				}
 
 		}
 		
+		/*
+		 * This method will use recipe to build products, it will call itself recursively if it is comprised of items needing to build
+		 */
+		
+		private double makeRecipe(String strOrderItem, int intOrderItemQuantity) throws ItemNotMadeException
+		{
+			RecipeDataBean objRecipe=objRecipeMap.get(strOrderItem);
+			double totalRecipeTime=0.0;
+			if (objRecipe!=null)
+			{
+				JSONObject itemsConsumed=objRecipe.getObjItemsConsumed();
+				//simple or complex items needed
+				for (int counter=0;counter<intOrderItemQuantity;counter++) {
+					double itemRecipeTime=0.0;
+					for (Object item : itemsConsumed.keySet()) {
+						double innerRecipeTime=0.0;
+				    	String strItem=(String)item;
+				    	int qtyNeeded=Integer.parseInt(itemsConsumed.get(strItem).toString());
+						if(isEnoughItems(strItem,qtyNeeded))
+			        	  {
+
+							getItemFromInventroy(strItem,qtyNeeded);
+			        		  
+			        	  }
+			        	  else if((innerRecipeTime=makeRecipe(strItem,qtyNeeded))>0)
+			        	  {
+			        		  
+			        		  itemRecipeTime=itemRecipeTime+innerRecipeTime;
+			        		  getItemFromInventroy(strItem,qtyNeeded);
+			        	  }
+			        	  else
+			        	  {
+			        		  throw new ItemNotMadeException("Not enough Items available");
+			        	  }
+					}
+					itemRecipeTime=itemRecipeTime+objRecipe.getFltTime();
+					totalRecipeTime=totalRecipeTime+itemRecipeTime;
+					System.out.println("Building recipe "+objRecipe.getStrRecipeKey()+" in "+objRecipe.getFltTime()+"s"+ ", ( "+itemRecipeTime+")");
+					updateInventory(objRecipe.getStrItemProduced(),objRecipe.getIntItemQuantityProduced());
+				}
+			}
+			return totalRecipeTime;
+
+		}
+		
+		/*
+		 * Utility method to update the inventory
+		 */
 		public void updateInventory(String itemProduced, int qtyProduced)
 		{
 			int availableQuantity=0;
@@ -130,47 +129,36 @@ import java.util.Map;
 			{
 				availableQuantity=(int)objInventory.get(itemProduced);
 				availableQuantity=availableQuantity+qtyProduced;
-				//System.out.println("updating inventory for "+itemProduced+" to "+availableQuantity);
 				objInventory.put(itemProduced, availableQuantity);
 			}
 			else
 			{
-				//System.out.println("creating inventory for "+itemProduced+" to "+qtyProduced);
 				objInventory.put(itemProduced, qtyProduced);
 			}
 		}
 		
-		public boolean getOrMakeItem(String strItem, int qtyNeeded)
-		{
-			boolean isItemAccomplished=false;
-			
-			if (!isEnoughItems(strItem,qtyNeeded))
-			{
-				if(!furnishOrderFromRecipe(strItem,qtyNeeded))
-				{
-					System.out.println("not enough inventory available to do this work"+strItem);
-					return false;
-				}
-			}
-			return getItemFromInventroy(strItem,qtyNeeded);
-		}
+		/*
+		 * Utility method to check if enough items are available as requested for the order
+		 */
 		
 		public boolean isEnoughItems(String strItem,int qtyNeeded)
 		{
-			int availableQty=-1;
 			if (objInventory.get(strItem)!=null && Integer.parseInt(objInventory.get(strItem).toString())>qtyNeeded)
 			{
 				return true;
 			}
 			else
 			{
-				System.out.println();
 				return false;
 			}
 			
 		}
 
-		
+
+		/*
+		 * This method will reduce inventory by items needed
+		 */
+
 		public boolean getItemFromInventroy(String strItem,int qtyNeeded)
 		{
 			int availableQty=-1;
@@ -197,6 +185,10 @@ import java.util.Map;
 		}
 		
 		
+		/*
+		 * Utility method to read inventory JSON file
+		 */
+
 		public void readInventoryFile(String filePath)
 	    {
 	        JSONParser objParser = new JSONParser();
@@ -211,6 +203,11 @@ import java.util.Map;
 	        }
 	    	
 	    }
+		
+		/*
+		 * Utility method to read recipe JSON file
+		 */
+
 	    
 	    public void readRecipes(String filePath)
 	    {
@@ -237,7 +234,11 @@ import java.util.Map;
 
 	    }
 	  
-	
+	    /*
+		 * This will update RecipeDatBean with specific values
+		 */
+
+	    
 		public void updateRecipeValues(RecipeDataBean objRecipe, JSONObject recipeValues)
 		{
 			if(recipeValues!=null)
@@ -249,6 +250,10 @@ import java.util.Map;
 				updateItemProduced(objRecipe, (JSONObject)recipeValues.get("produces"));
 			}
 		}
+
+	    /*
+		 * This will put the RecipeDataBean in map keyed to recipe Name
+		 */
 		
 		public void updateItemProduced(RecipeDataBean objRecipe, JSONObject itemProduced)
 		{
@@ -266,6 +271,38 @@ import java.util.Map;
 				
 			}
 		}
+		
+	    /*
+		 * Utility method to print the recipes and inventory count
+		 */
+		
+		public void printCount()
+		{
+			if(objRecipeMap!=null)
+			{
+				System.out.println("Recipes Loaded : "+objRecipeMap.size());
+			}
+			if(objInventory!=null)
+			{
+				System.out.println("Inventory Loaded : "+objInventory.size());
+			}
+		}
+		
+	    /*
+		 * Utility method to print inventory status when needed
+		 */
+		
+		public void printInventoryStatus()
+		{
+			for (Object inventoryItem : objInventory.keySet()) {
+	    	String strItem=(String)inventoryItem;
+	    	int qtyStatus=Integer.parseInt(objInventory.get(strItem).toString());
+	    	System.out.println("Inventory Status:");
+	    	System.out.println(strItem+ " : " +qtyStatus );
+		}
+			
+		}
+
 
 		
 		
