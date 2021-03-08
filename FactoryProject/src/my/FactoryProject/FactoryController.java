@@ -1,6 +1,7 @@
-package my.testProject;
+package my.FactoryProject;
 
 import org.json.simple.JSONObject;
+
 
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -18,21 +19,11 @@ import java.util.Map;
 	{
 		public JSONObject objInventory=new JSONObject();
 		public Map<String,RecipeDataBean> objRecipeMap=new HashMap<String,RecipeDataBean>();
-	    public static void main(String[] args) {
-	    	
-	    	FactoryController fc=new FactoryController();
-	        fc.readInventoryFile();
-	        fc.readRecipes();
-	        //jse.furnishOrderFromRecipe("electric_engine",3);
-	        fc.furnishOrderFromRecipe("pipe",3);
-	        fc.furnishOrderFromRecipe("steel_plate",8);
-	      //  jse.furnishOrder("electric_circuit",5);
-	      //  jse.furnishOrder("electric_engine",3);
-}
-	    public void readInventoryFile()
+
+		public void readInventoryFile(String filePath)
 	    {
 	        JSONParser objParser = new JSONParser();
-	    	try (Reader objReader = new FileReader(".\\data\\inventory.json")) {
+	    	try (Reader objReader = new FileReader(filePath)) {
             objInventory = (JSONObject) objParser.parse(objReader);
             
 	    	} catch (IOException e) {
@@ -44,11 +35,11 @@ import java.util.Map;
 	    	
 	    }
 	    
-	    public void readRecipes()
+	    public void readRecipes(String filePath)
 	    {
 	    	JSONParser objParser = new JSONParser();
 	    	RecipeDataBean objRecipe;
-	    	try (Reader objReader = new FileReader(".\\data\\recipes.json")) {
+	    	try (Reader objReader = new FileReader(filePath)) {
             JSONObject objJson = (JSONObject) objParser.parse(objReader);
 
             for (Object key : objJson.keySet()) {
@@ -108,10 +99,7 @@ import java.util.Map;
 			System.out.println("Make "+strOrderItem+" with qty "+intOrderItemQuantity+" from recipe.");
 
 			RecipeDataBean objRecipe=objRecipeMap.get(strOrderItem);
-			System.out.println("Trying to make recipe from "+objRecipe);
 			float timeNeeded=(float) 0.0;
-			//System.out.println("Time needed in beginning ->"+timeNeeded);
-			boolean isFurnishingPossible=false;
 			if (objRecipe!=null)
 			{
 				JSONObject itemsConsumed=objRecipe.getObjItemsConsumed();
@@ -155,24 +143,21 @@ import java.util.Map;
 			}
 	    	else if(furnishOrderFromRecipe(strItem,qtyNeeded))
 	    	{
-	    		System.out.println("Try to make item");
-	    		objInventory.put(strItem, qtyNeeded);
-	    		return furnishOrderFromRecipe(strItem,qtyNeeded);
+	    		//objInventory.put(strItem, qtyNeeded);
+	    		return true;
 	    	}
 	    	return isItemAccomplished;
 		}
 		
 		public boolean getItemFromInventroy(String strItem,int qtyNeeded)
 		{
-			System.out.println("Item name->"+strItem);
-			System.out.println("item quantity in JSON-->"+objInventory.get(strItem));
 			int availableQty=-1;
 			if (objInventory.get(strItem)!=null)
 			{
 				availableQty=Integer.parseInt(objInventory.get(strItem).toString());
 				availableQty=availableQty-qtyNeeded;
 				objInventory.put(strItem.toString(), availableQty);
-				System.out.println("Available quatntity->"+objInventory.get(strItem).toString());
+				System.out.println("Available quatntity after giving inventory->"+objInventory.get(strItem).toString());
 				if(availableQty<=0)
 				{
 					System.out.println("Not enough items avilable of "+strItem);
